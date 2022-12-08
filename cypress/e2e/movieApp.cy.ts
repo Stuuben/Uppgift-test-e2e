@@ -1,37 +1,48 @@
+import { should } from "chai";
 import { mockData } from "./../../src/ts/services/__mock__/movieservice";
 
+let fakedata = [];
+
+beforeEach(() => {
+  cy.visit("/");
+});
+
 describe("MovieApps get movies", () => {
-  it("Should go to site", () => {
-    cy.visit("http://localhost:1234");
+  it("Should request url", () => {
+    cy.intercept("GET", "http://omdbapi.com/*", { mockData }).as("movieNow");
+    cy.get("input").type("best");
+    cy.get("button").click();
+    cy.wait("@movieNow").its("request.url").should("contain", "best");
   });
+
+  it("Should go to site", () => {});
   it("Should search for movies with input.value Star", () => {
-    cy.visit("http://localhost:1234");
+    cy.intercept("GET", "http://omdbapi.com/*", mockData);
     cy.get("input").type("Star");
     cy.get("button").click();
   });
   it("Should find first h3", () => {
-    cy.visit("http://localhost:1234");
+    cy.intercept("GET", "http://omdbapi.com/*", mockData);
     cy.get("input").type("Star");
     cy.get("button").click();
-    cy.get("h3:first").contains("Star Wars: Episode IV - A New Hope");
+    cy.get("h3:first").contains("Best");
   });
-  it("Should find 10 divs", () => {
-    cy.visit("http://localhost:1234");
-    cy.get("input").type("Star");
+  it("Should find 4 divs", () => {
+    cy.intercept("GET", "http://omdbapi.com/*", mockData);
+    cy.get("input").type("Best");
     cy.get("button").click();
-    cy.get("div.movie").should("have.length", 10);
+    cy.get("div.movie").should("have.length", 4);
   });
   it("Should get error-message searching with 2 letters", () => {
-    cy.visit("http://localhost:1234");
+    cy.intercept("GET", "http://omdbapi.com/*", fakedata);
     cy.get("input").type("st");
     cy.get("button").click();
     cy.get("p").contains("Inga sökresultat att visa");
   });
-
-  /*   it("Should get 4 movies", () => {
-    cy.visit("http://localhost:1234");
-    cy.intercept("GET", "http://omdbapi.com/*", { mockData }).as(mockData);
-
-    cy.wait("@mockMoives").its("request.url").should("contain", "Best");
-  }); */
+  it("Should get error-message searching with 2 letters", () => {
+    cy.intercept("GET", "http://omdbapi.com/*", fakedata);
+    cy.get("input").type("st");
+    cy.get("button").click();
+    cy.get("div.movie").should("have.length", 0);
+  });
 });
